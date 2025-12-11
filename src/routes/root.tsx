@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import Navbar from "../components/ui/Navbar";
+import Navbar from "../components/nav/Navbar";
 import Footer from "./pages/Footer";
 import type { AppDispatch, RootState } from "@/store/store";
 import { useAppDispatch } from "@/store/hooks";

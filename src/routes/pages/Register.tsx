@@ -2,7 +2,7 @@ import { auth } from "@/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import RegisterForm from "@/components/register-form";
+import RegisterForm from "@/components/auth/register-form";
 
 const Register = () => {
   const [email, setEmail] = useState<string>("");
@@ -26,13 +26,17 @@ const Register = () => {
   };
 
   return (
-    <RegisterForm
-      onSubmit={onSubmit}
-      email={email}
-      setEmail={setEmail}
-      password={password}
-      setPassword={setPassword}
-    />
+    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+      <div className="w-full max-w-sm">
+        <RegisterForm
+          onSubmit={onSubmit}
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+        />
+      </div>
+    </div>
   );
 };
 

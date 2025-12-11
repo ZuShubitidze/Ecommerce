@@ -1,5 +1,6 @@
 import {
   createAction,
+  createSelector,
   createSlice,
   type PayloadAction,
 } from "@reduxjs/toolkit";
@@ -8,9 +9,12 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
+  getDocs,
   onSnapshot,
   query,
   setDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "@/firebase";
 
@@ -71,28 +75,76 @@ export const subscribeToCart = (userId: string) => (dispatch: any) => {
 // Thunk to add products to cart
 export const addCartProductToFirestore =
   (userId: string, product: FavoriteProductData) => async () => {
-    // Error
     if (!userId) {
       console.error("Can't add to cart: No user ID provided.");
       return;
     }
-    if (!product) {
+    if (!product || !product.id) {
       console.error("Can't add to cart: Product is missing ID.");
       return;
     }
 
     const docId = String(product.id);
-    console.log(userId);
+    const cartProductDocRef = doc(db, `users/${userId}/cart`, docId);
 
     try {
-      // Give location where to save cart products
-      const cartProductDocRef = doc(db, `users/${userId}/cart`, docId);
-      // Use setdoc to add/overwrite product to cart with product ID as doc ID
-      await setDoc(cartProductDocRef, product);
-      // The onSnapshot listener will automatically update the Redux state via subscribeToFavorites
-      console.log(`Product ${product.id} added to Cart for user ${userId}`);
+      const docSnap = await getDoc(cartProductDocRef);
+
+      if (docSnap.exists()) {
+        // Product already in cart, increment quantity
+        const existingData = docSnap.data() as FavoriteProductData;
+        const newQuantity = (existingData.quantity || 1) + 1; // Default to 1 if quantity was somehow missing
+        await updateDoc(cartProductDocRef, { quantity: newQuantity });
+        console.log(
+          `Quantity for product ${product.id} incremented to ${newQuantity} for user ${userId}`
+        );
+      } else {
+        // Product not in cart, add it with quantity 1
+        await setDoc(cartProductDocRef, { ...product, quantity: 1 });
+        console.log(
+          `Product ${product.id} added to Cart with quantity 1 for user ${userId}`
+        );
+      }
+      // The onSnapshot listener will automatically update the Redux state
     } catch (error: any) {
-      console.error("Error adding cart product to Firestore:", error);
+      console.error("Error adding/updating cart product in Firestore:", error);
+    }
+  };
+
+// Thunk to directly update a product's quantity in the cart
+export const updateCartProductQuantityInFirestore =
+  (userId: string, productId: string, newQuantity: number) => async () => {
+    if (!userId) {
+      console.error("Can't update quantity: No user ID provided.");
+      return;
+    }
+    if (!productId) {
+      console.error("Can't update quantity: Product ID is missing.");
+      return;
+    }
+
+    const cartProductDocRef = doc(db, `users/${userId}/cart`, productId);
+
+    try {
+      if (newQuantity <= 0) {
+        // If quantity is 0 or less, remove the item from the cart
+        await deleteDoc(cartProductDocRef);
+        console.log(
+          `Product ${productId} removed from Cart for user ${userId} due to quantity <= 0.`
+        );
+      } else {
+        // Otherwise, update the quantity
+        await updateDoc(cartProductDocRef, { quantity: newQuantity });
+        console.log(
+          `Quantity for product ${productId} updated to ${newQuantity} for user ${userId}`
+        );
+      }
+      // The onSnapshot listener will automatically update the Redux state
+    } catch (error: any) {
+      console.error(
+        "Error updating cart product quantity in Firestore:",
+        error
+      );
     }
   };
 
@@ -118,6 +170,38 @@ export const removeCartProductFromFirestore =
     }
   };
 
+// Thunk to clear the entire cart in Firestore
+export const clearCartInFirestore =
+  (userId: string) => async (dispatch: any) => {
+    if (!userId) {
+      console.error("Can't clear cart: No user ID provided.");
+      // Optionally, clear local Redux state if no user to prevent stale data
+      dispatch(clearCart()); // Assuming clearCart is accessible here, or import it.
+      return;
+    }
+
+    const cartCollectionRef = collection(db, `users/${userId}/cart`);
+    try {
+      // Get all documents in the subcollection
+      const querySnapshot = await getDocs(cartCollectionRef);
+      const deletePromises: Promise<void>[] = [];
+
+      querySnapshot.forEach((docRef) => {
+        deletePromises.push(deleteDoc(docRef.ref));
+      });
+
+      await Promise.all(deletePromises);
+      console.log(
+        `All items cleared from cart for user ${userId} in Firestore.`
+      );
+      // The onSnapshot listener (from subscribeToCart) will automatically update
+      // the Redux state because all documents have been deleted in Firestore.
+    } catch (error: any) {
+      console.error("Error clearing cart in Firestore:", error);
+      // Optionally, you could dispatch an error action here
+    }
+  };
+
 // Cart slice
 const cartSlice = createSlice({
   name: "cart",
@@ -128,6 +212,17 @@ const cartSlice = createSlice({
       state.cartProducts = [];
       state.loading = false;
       state.error = null;
+    },
+    // Update quantity
+    updateCartProductQuantity: (
+      state,
+      action: PayloadAction<{ productId: string; quantity: number }>
+    ) => {
+      const { productId, quantity } = action.payload;
+      const product = state.cartProducts.find((item) => item.id === productId);
+      if (product) {
+        product.quantity = quantity;
+      }
     },
   },
   // Redux thunk
@@ -152,4 +247,34 @@ const cartSlice = createSlice({
 });
 
 export const { clearCart } = cartSlice.actions;
+
+// Selectors
+export const selectCartProducts = (state: { cart: CartState }) =>
+  state.cart.cartProducts;
+export const selectCartLoading = (state: { cart: CartState }) =>
+  state.cart.loading;
+export const selectCartError = (state: { cart: CartState }) => state.cart.error;
+
+// Calculate total amount and currency
+export const selectCartTotal = createSelector(
+  [selectCartProducts], // Array of input selectors (what this selector depends on)
+  (cartProducts) => {
+    // The "result function" - only runs if cartProducts changes
+    let totalAmount = 0;
+    cartProducts.forEach((product) => {
+      const quantity =
+        product.quantity && product.quantity > 0 ? product.quantity : 1;
+      totalAmount += product.price * quantity;
+    });
+
+    const currency = "usd"; // Or dynamically determined if your app supports it
+
+    // This object is only created and returned if cartProducts actually changed
+    return {
+      totalAmount: parseFloat(totalAmount.toFixed(2)),
+      currency,
+    };
+  }
+);
+
 export default cartSlice.reducer;

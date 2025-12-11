@@ -12,13 +12,14 @@ import { removeFromFavorites } from "@/store/favorites/hooks/removeFromFavorites
 import { useAppDispatch } from "@/store/hooks";
 import type { RootState } from "@/store/store";
 import { useSelector } from "react-redux";
+import { handleToggleCart } from "@/store/cart/hooks/handleToggleCart";
 
 // Props interface
 interface FavoritesProductsProps {
   title: string;
   price: number;
-  category: string;
-  image: string;
+  category?: string;
+  images?: string[] | string | null;
   handleClick: () => void;
   isFavorite: boolean;
   user: any;
@@ -30,29 +31,30 @@ const FavoritesProducts = ({
   title,
   price,
   category,
-  image,
+  images,
   handleClick,
   user,
   isFavorite,
   id,
 }: FavoritesProductsProps) => {
   // Determine image source with fallback
-  const imgSrc = image && image.startsWith("http") ? image : substituteImage;
+  const imgSrc =
+    images?.[0] && images[0].startsWith("http") ? images[0] : substituteImage;
+
   const dispatch = useAppDispatch();
+  const cart = useSelector((state: RootState) => state.cart.cartProducts);
   const favorites = useSelector((state: RootState) => state.favorites);
+  const isInCart = cart.some((car) => car.id === id.toString());
 
   return (
     // Favorites Product Card
-    <Card
-      className="p-4 h-full w-100 md:w-120 flex flex-col"
-      onClick={handleClick}
-    >
+    <Card className="flex flex-col w-100" onClick={handleClick}>
       {/* Card Header */}
-      <CardHeader className="flex items-center justify-between mb-4">
+      <CardHeader className="flex flex-col md:flex-row items-center justify-between mb-4">
         <CardTitle>{title}</CardTitle>
         {user && (
-          // Remove from Favorites Button
-          <CardAction>
+          <CardAction className="flex flex-col gap-4 w-full md:items-end">
+            {/* Remove from Favorites Button */}
             <Button
               onClick={(event) =>
                 removeFromFavorites(
@@ -67,7 +69,20 @@ const FavoritesProducts = ({
             >
               ❤️ Remove from Favorites
             </Button>
-            <Button>Add to Cart</Button>
+            {/* Cart Toggle Button */}
+            <Button
+              onClick={(event) =>
+                handleToggleCart(event, isInCart, user, id, dispatch, {
+                  id,
+                  title,
+                  price,
+                  category,
+                  images: typeof images === "string" ? [images] : images,
+                })
+              }
+            >
+              {isInCart ? "Remove from Cart" : "Add to Cart"}
+            </Button>
           </CardAction>
         )}
       </CardHeader>

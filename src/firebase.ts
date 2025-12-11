@@ -2,14 +2,14 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getFunctions } from "firebase/functions";
+
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBWdeZbhwseYYFSP-7Js9fToaCCxKDCIFM",
-  authDomain: "ecommerce-c1091.firebaseapp.com",
+  authDomain: "ecommerce-c1091.web.app",
   projectId: "ecommerce-c1091",
   storageBucket: "ecommerce-c1091.firebasestorage.app",
   messagingSenderId: "467133371420",
@@ -22,5 +22,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 const db = getFirestore(app);
+const functions = getFunctions(app);
 
-export { auth, db };
+export { auth, db, functions };

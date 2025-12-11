@@ -14,9 +14,14 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 export function LoginForm({
   className,
@@ -41,8 +46,37 @@ export function LoginForm({
       .catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
-        console.log(errorCode, errorMessage);
+        console.log(
+          "Error signing in with email/password",
+          errorCode,
+          errorMessage
+        );
+        <div>
+          Error signing in with email/password: {errorCode} - {errorMessage}
+          <Link to="/auth/login">Try again</Link>
+          <Link to="/auth/register">Or register here</Link>
+        </div>;
       });
+  };
+
+  // Goolge Sign-In Handler
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      navigate("/");
+      console.log("Logged in successfully with Google");
+      // Failure
+    } catch (error: any) {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      console.log("Error signing in with Google", errorCode, errorMessage);
+      <div>
+        Error signing in with email/password: {errorCode} - {errorMessage}
+        <Link to="/auth/login">Try again</Link>
+        <Link to="/auth/register">Or register here</Link>
+      </div>;
+    }
   };
 
   return (
@@ -93,7 +127,11 @@ export function LoginForm({
               {/* Actions */}
               <Field>
                 <Button type="submit">Login</Button>
-                <Button variant="outline" type="button">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                >
                   Login with Google
                 </Button>
                 <FieldDescription className="text-center">

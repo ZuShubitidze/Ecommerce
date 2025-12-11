@@ -27,5 +27,6 @@ export const handleToggleCart = (
     dispatch(removeCartProductFromFirestore(user.uid, id));
   } else {
     dispatch(addCartProductToFirestore(user.uid, cartProductData));
+    console.log(`Added ${cartProductData.title} to Cart, userID: ${user.uid}`);
   }
 };

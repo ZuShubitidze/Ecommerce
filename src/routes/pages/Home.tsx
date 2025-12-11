@@ -8,9 +8,11 @@ import {
 import type { RootState } from "@/store/store";
 import Products from "@/components/Products";
 import { useSelector } from "react-redux";
+import { useAuth } from "../auth/AuthContext";
 
 const Home = () => {
   const { data } = useSelector((state: RootState) => state.products);
+  const { user } = useAuth();
 
   // Filter products for carousel
   const carouselProducts = data?.products.slice(0, 5) || [];
@@ -37,6 +39,7 @@ const Home = () => {
               images={product.images}
               price={product.price}
               title={product.title}
+              user={user}
             />
           </CarouselItem>
         ))}

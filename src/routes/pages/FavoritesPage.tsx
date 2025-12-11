@@ -16,13 +16,13 @@ const FavoritesPage = () => {
 
   return (
     <div>
-      <ul className="flex flex-wrap justify-center gap-6 py-10 md:py-15">
+      <ul className="flex flex-wrap justify-center p-10 gap-10 md:py-15">
         {favorites.favorites.map((product) => (
           <FavoritesProducts
             key={product.id}
             id={product.id}
             category={product.category}
-            image={product.images?.[0] ? product.images[0] : ""}
+            images={product.images ? product.images : ""}
             price={product.price}
             title={product.title}
             isFavorite={favorites.favorites.some(

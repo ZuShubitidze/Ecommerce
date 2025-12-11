@@ -10,7 +10,6 @@ import { useNavigate } from "react-router";
 import substituteImage from "../assets/download.png";
 import { useAppDispatch } from "@/store/hooks";
 import { Button } from "./ui/button";
-import { useAuth } from "@/routes/auth/AuthContext";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 import { handleToggleFavorite } from "@/store/favorites/hooks/handleToggleFavorite";
@@ -24,13 +23,20 @@ interface ProductsProps {
   description: string;
   category: string;
   images: string[];
+  user: any;
 }
 
 // Product Component
-const Products = ({ category, id, images, price, title }: ProductsProps) => {
+const Products = ({
+  category,
+  id,
+  images,
+  price,
+  title,
+  user,
+}: ProductsProps) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { user } = useAuth();
   const favorites = useSelector(
     (state: RootState) => state.favorites.favorites
   );
@@ -49,13 +55,13 @@ const Products = ({ category, id, images, price, title }: ProductsProps) => {
 
   return (
     // Product Card
-    <Card className="md:p-2 lg:p-4 h-full flex flex-col" onClick={handleClick}>
+    <Card className="flex flex-col w-100" onClick={handleClick}>
       {/* Card Header */}
-      <CardHeader className="flex items-center justify-between mb-4">
+      <CardHeader className="flex flex-col md:flex-row items-center justify-between">
         <CardTitle>{title}</CardTitle>
         {user && (
           // Card Actions
-          <CardAction className="flex flex-col gap-4">
+          <CardAction className="flex flex-col gap-4 w-full md:items-end">
             {/* Favorite Toggle Button */}
             <Button
               onClick={(event) =>
@@ -68,7 +74,7 @@ const Products = ({ category, id, images, price, title }: ProductsProps) => {
                 })
               }
             >
-              {isFavorite ? "❤️ Remove from Favorites" : "🤍 Add to Favorites"}
+              {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
             </Button>
             {/* Cart Toggle Button */}
             <Button
@@ -78,7 +84,7 @@ const Products = ({ category, id, images, price, title }: ProductsProps) => {
                   title,
                   price,
                   category,
-                  images,
+                  images: typeof images === "string" ? [images] : images,
                 })
               }
             >

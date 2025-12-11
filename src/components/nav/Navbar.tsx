@@ -1,8 +1,8 @@
 import { NavLink } from "react-router";
-import { ModeToggle } from "./mode-toggle";
 import { auth } from "@/firebase";
 import { useAuth } from "@/routes/auth/AuthContext";
-import { Button } from "./button";
+import { Button } from "../ui/button";
+import { ModeToggle } from "./mode-toggle";
 
 const Navbar = () => {
   const { user } = useAuth();

@@ -10,6 +10,8 @@ import ProductDetail from "./pages/ProductDetail.tsx";
 import FavoritesPage from "./pages/FavoritesPage.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import CartPage from "./pages/CartPage.tsx";
+import PaymentPage from "./pages/PaymentPage.tsx";
+import OrderConfirmationPage from "./pages/OrderConfirmationPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -23,6 +25,11 @@ const router = createBrowserRouter([
       { path: "products/:id", element: <ProductDetail /> },
       { path: "favorites", element: <FavoritesPage /> },
       { path: "cart", element: <CartPage /> },
+      { path: "cart/checkout", element: <PaymentPage /> },
+      {
+        path: "cart/checkout/order-confirmation",
+        element: <OrderConfirmationPage />,
+      },
       { path: "dashboard", element: <Dashboard /> },
       {
         path: "auth",
