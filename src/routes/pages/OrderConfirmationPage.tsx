@@ -8,7 +8,6 @@ import {
   type DocumentData,
 } from "firebase/firestore";
 import { db } from "@/firebase"; // Assuming db is exported from src/firebase.ts or similar
-import { useAuth } from "../auth/AuthContext"; // Adjust path as needed
 import {
   Card,
   CardContent,
@@ -17,6 +16,8 @@ import {
   CardFooter,
 } from "@/components/ui/card"; // Assuming Shadcn UI is used
 import { Link, useNavigate } from "react-router";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store/store";
 
 interface OrderDocument extends DocumentData {
   amount: number;
@@ -36,7 +37,11 @@ interface OrderDocument extends DocumentData {
 }
 
 const OrderConfirmationPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useSelector(
+    (state: RootState) => state.auth,
+  );
+
+  if (authLoading) return null;
   const navigate = useNavigate();
   const [order, setOrder] = useState<OrderDocument | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,7 +61,7 @@ const OrderConfirmationPage: React.FC = () => {
     // Query for the latest successfully completed payment document for the current user
     const paymentsCollectionRef = collection(
       db,
-      `stripe_customers/${user.uid}/payments`
+      `stripe_customers/${user.uid}/payments`,
     );
 
     // Order by 'created' timestamp in descending order and take the first one
@@ -64,7 +69,7 @@ const OrderConfirmationPage: React.FC = () => {
     const q = query(
       paymentsCollectionRef,
       orderBy("created", "desc"),
-      limit(1)
+      limit(1),
     );
 
     const unsubscribe = onSnapshot(
@@ -79,7 +84,7 @@ const OrderConfirmationPage: React.FC = () => {
             setOrder(orderData);
           } else if (orderData.error) {
             setError(
-              orderData.error.message || "Payment failed for the last order."
+              orderData.error.message || "Payment failed for the last order.",
             );
           } else {
             // If status is not yet 'succeeded' and no error, it might still be processing.
@@ -88,7 +93,7 @@ const OrderConfirmationPage: React.FC = () => {
             setOrder(orderData);
             console.log(
               "Order found, but status is not 'succeeded' yet or is pending. Current status:",
-              orderData.status
+              orderData.status,
             );
           }
         } else {
@@ -99,10 +104,10 @@ const OrderConfirmationPage: React.FC = () => {
       (err) => {
         console.error("Error fetching order:", err);
         setError(
-          "Failed to load order details. Please check your internet connection."
+          "Failed to load order details. Please check your internet connection.",
         );
         setLoading(false);
-      }
+      },
     );
 
     return () => unsubscribe(); // Cleanup the Firestore listener when the component unmounts

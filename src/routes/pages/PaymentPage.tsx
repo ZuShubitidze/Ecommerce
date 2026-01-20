@@ -1,7 +1,6 @@
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import CheckoutForm from "@/components/stripe/CheckoutForm";
-import { useAuth } from "../auth/AuthContext";
 import { useDispatch, useSelector } from "react-redux";
 import {
   selectCartError,
@@ -12,13 +11,19 @@ import {
 } from "@/store/cart/cartSlice";
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
+import type { RootState } from "@/store/store";
 
 const stripePromise = loadStripe(
-  "pk_test_51RLeip01iZRBFKlPw4RTYyeeUAMLIzKUp38vfXFFH5pTRDZQ0rNJOWdWeBRaJVyPWT7JvNpyy01rNZ4e1yawekgt00httHa3Zg"
+  "pk_test_51RLeip01iZRBFKlPw4RTYyeeUAMLIzKUp38vfXFFH5pTRDZQ0rNJOWdWeBRaJVyPWT7JvNpyy01rNZ4e1yawekgt00httHa3Zg",
 );
 
 const PaymentPage = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth();
+  const { user, loading: authLoading } = useSelector(
+    (state: RootState) => state.auth,
+  );
+
+  if (authLoading) return null;
   const dispatch = useDispatch();
   const navigate = useNavigate();
 

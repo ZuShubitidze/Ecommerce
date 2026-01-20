@@ -2,7 +2,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -97,7 +96,6 @@ const FavoritesProducts = ({
           onError={(e) => (e.currentTarget.src = substituteImage)}
         />
       </CardContent>
-      <CardFooter>Card Footer</CardFooter>
     </Card>
   );
 };

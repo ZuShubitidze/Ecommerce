@@ -12,29 +12,39 @@ import Dashboard from "./pages/Dashboard.tsx";
 import CartPage from "./pages/CartPage.tsx";
 import PaymentPage from "./pages/PaymentPage.tsx";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage.tsx";
+import { rootLoader } from "./rootLoader.ts";
+import { loginAction } from "@/components/auth/auth.actions.ts";
+import ProtectedRoute from "./ProtectedRoute.tsx";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Root />,
+    loader: rootLoader,
     children: [
       { index: true, element: <Home /> },
       { path: "about", element: <About /> },
       { path: "contact", element: <Contact /> },
       { path: "products", element: <ProductsPage /> },
       { path: "products/:id", element: <ProductDetail /> },
-      { path: "favorites", element: <FavoritesPage /> },
-      { path: "cart", element: <CartPage /> },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          // Protected routes go here
+          { path: "dashboard", element: <Dashboard /> },
+          { path: "favorites", element: <FavoritesPage /> },
+          { path: "cart", element: <CartPage /> },
+        ],
+      },
       { path: "cart/checkout", element: <PaymentPage /> },
       {
         path: "cart/checkout/order-confirmation",
         element: <OrderConfirmationPage />,
       },
-      { path: "dashboard", element: <Dashboard /> },
       {
         path: "auth",
         children: [
-          { path: "login", element: <Login /> },
+          { path: "login", element: <Login />, action: loginAction },
           { path: "register", element: <Register /> },
         ],
       },

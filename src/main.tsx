@@ -7,6 +7,9 @@ import { Provider } from "react-redux";
 import { store } from "./store/store.ts";
 import "./firebase.ts";
 import { AuthProvider } from "./routes/auth/AuthContext.tsx";
+import { initAuthListener } from "./app/authListener.ts";
+
+initAuthListener();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -15,5 +18,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <RouterProvider router={router} />
       </Provider>
     </AuthProvider>
-  </ThemeProvider>
+  </ThemeProvider>,
 );

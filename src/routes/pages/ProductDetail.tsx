@@ -12,19 +12,20 @@ import {
 import type { ProductsResponse } from "@/store/products/interfaces/product.interface";
 import { Button } from "@/components/ui/button";
 import { useAppDispatch } from "@/store/hooks";
-import { useAuth } from "../auth/AuthContext";
 import { handleToggleFavorite } from "@/store/favorites/hooks/handleToggleFavorite";
 import { handleToggleCart } from "@/store/cart/hooks/handleToggleCart";
 
 const ProductDetail = () => {
   const dispatch = useAppDispatch();
-  const { user } = useAuth();
+  const { user, loading } = useSelector((state: RootState) => state.auth);
+
+  if (loading) return null;
   const id = useParams();
-  const { data }: { data: ProductsResponse } = useSelector(
-    (state: RootState) => state.products
+  const data: ProductsResponse = useSelector(
+    (state: RootState) => state.products,
   );
   const favorites = useSelector(
-    (state: RootState) => state.favorites.favorites
+    (state: RootState) => state.favorites.favorites,
   );
   const cart = useSelector((state: RootState) => state.cart.cartProducts);
   const isFavorite = favorites.some((fav) => fav.id === id.id);
@@ -62,10 +63,10 @@ const ProductDetail = () => {
                         handleToggleFavorite(
                           event,
                           isFavorite,
-                          user,
+                          user as any,
                           id,
                           dispatch,
-                          { id, title, price, category, images }
+                          { id, title, price, category, images },
                         )
                       }
                     >
@@ -76,13 +77,20 @@ const ProductDetail = () => {
                     {/* Cart Toggle Button */}
                     <Button
                       onClick={(event) =>
-                        handleToggleCart(event, isInCart, user, id, dispatch, {
+                        handleToggleCart(
+                          event,
+                          isInCart,
+                          user as any,
                           id,
-                          title,
-                          price,
-                          category,
-                          images,
-                        })
+                          dispatch,
+                          {
+                            id,
+                            title,
+                            price,
+                            category,
+                            images,
+                          },
+                        )
                       }
                     >
                       {isInCart ? "Remove from Cart" : "Add to Cart"}
@@ -122,7 +130,7 @@ const ProductDetail = () => {
               </CardContent>
               <CardFooter>Card Footer</CardFooter>
             </Card>
-          )
+          ),
         )}
     </div>
   );

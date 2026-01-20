@@ -35,7 +35,7 @@ const initialState: CartState = {
 // These actions will be dispatched by our thunks that interact with Firestore.
 export const fetchCartRequest = createAction("cart/fetchCartRequest");
 export const fetchCartSuccess = createAction<FavoriteProductData[]>(
-  "cart/fetchCartSuccess"
+  "cart/fetchCartSuccess",
 );
 export const fetchCartFailure = createAction<string>("cart/fetchCartFailure");
 
@@ -66,7 +66,7 @@ export const subscribeToCart = (userId: string) => (dispatch: any) => {
     (error: any) => {
       console.log("Error subscribing to cart", error);
       dispatch(fetchCartFailure(error.message));
-    }
+    },
   );
 
   return unsubscribe;
@@ -96,13 +96,13 @@ export const addCartProductToFirestore =
         const newQuantity = (existingData.quantity || 1) + 1; // Default to 1 if quantity was somehow missing
         await updateDoc(cartProductDocRef, { quantity: newQuantity });
         console.log(
-          `Quantity for product ${product.id} incremented to ${newQuantity} for user ${userId}`
+          `Quantity for product ${product.id} incremented to ${newQuantity} for user ${userId}`,
         );
       } else {
         // Product not in cart, add it with quantity 1
         await setDoc(cartProductDocRef, { ...product, quantity: 1 });
         console.log(
-          `Product ${product.id} added to Cart with quantity 1 for user ${userId}`
+          `Product ${product.id} added to Cart with quantity 1 for user ${userId}`,
         );
       }
       // The onSnapshot listener will automatically update the Redux state
@@ -130,20 +130,20 @@ export const updateCartProductQuantityInFirestore =
         // If quantity is 0 or less, remove the item from the cart
         await deleteDoc(cartProductDocRef);
         console.log(
-          `Product ${productId} removed from Cart for user ${userId} due to quantity <= 0.`
+          `Product ${productId} removed from Cart for user ${userId} due to quantity <= 0.`,
         );
       } else {
         // Otherwise, update the quantity
         await updateDoc(cartProductDocRef, { quantity: newQuantity });
         console.log(
-          `Quantity for product ${productId} updated to ${newQuantity} for user ${userId}`
+          `Quantity for product ${productId} updated to ${newQuantity} for user ${userId}`,
         );
       }
       // The onSnapshot listener will automatically update the Redux state
     } catch (error: any) {
       console.error(
         "Error updating cart product quantity in Firestore:",
-        error
+        error,
       );
     }
   };
@@ -192,7 +192,7 @@ export const clearCartInFirestore =
 
       await Promise.all(deletePromises);
       console.log(
-        `All items cleared from cart for user ${userId} in Firestore.`
+        `All items cleared from cart for user ${userId} in Firestore.`,
       );
       // The onSnapshot listener (from subscribeToCart) will automatically update
       // the Redux state because all documents have been deleted in Firestore.
@@ -216,7 +216,7 @@ const cartSlice = createSlice({
     // Update quantity
     updateCartProductQuantity: (
       state,
-      action: PayloadAction<{ productId: string; quantity: number }>
+      action: PayloadAction<{ productId: string; quantity: number }>,
     ) => {
       const { productId, quantity } = action.payload;
       const product = state.cartProducts.find((item) => item.id === productId);
@@ -237,7 +237,7 @@ const cartSlice = createSlice({
         (state, action: PayloadAction<FavoriteProductData[]>) => {
           state.loading = false;
           state.cartProducts = action.payload;
-        }
+        },
       )
       .addCase(fetchCartFailure, (state, action: PayloadAction<string>) => {
         state.loading = false;
@@ -274,7 +274,7 @@ export const selectCartTotal = createSelector(
       totalAmount: parseFloat(totalAmount.toFixed(2)),
       currency,
     };
-  }
+  },
 );
 
 export default cartSlice.reducer;

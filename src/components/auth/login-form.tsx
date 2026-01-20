@@ -14,133 +14,63 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from "firebase/auth";
-import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Form, useActionData } from "react-router";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const auth = getAuth();
-  const navigate = useNavigate();
-
-  // Form onSubmit
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Attempt to sign in with email and password
-    signInWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        // Successful Sign in
-        navigate("/");
-        console.log("Logged in successfully");
-      })
-      // Failure
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log(
-          "Error signing in with email/password",
-          errorCode,
-          errorMessage
-        );
-        <div>
-          Error signing in with email/password: {errorCode} - {errorMessage}
-          <Link to="/auth/login">Try again</Link>
-          <Link to="/auth/register">Or register here</Link>
-        </div>;
-      });
-  };
-
-  // Goolge Sign-In Handler
-  const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      navigate("/");
-      console.log("Logged in successfully with Google");
-      // Failure
-    } catch (error: any) {
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      console.log("Error signing in with Google", errorCode, errorMessage);
-      <div>
-        Error signing in with email/password: {errorCode} - {errorMessage}
-        <Link to="/auth/login">Try again</Link>
-        <Link to="/auth/register">Or register here</Link>
-      </div>;
-    }
-  };
+  const actionData = useActionData() as
+    | { error: string; message: string }
+    | undefined;
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
-        {/* Header */}
         <CardHeader>
           <CardTitle>Login to your account</CardTitle>
           <CardDescription>
             Enter your email below to login to your account
           </CardDescription>
         </CardHeader>
-        {/* Content */}
+
         <CardContent>
-          <form onSubmit={onSubmit}>
+          <Form method="post">
             <FieldGroup>
-              {/* Email */}
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <Input name="email" id="email" type="email" required />
               </Field>
-              {/* Password */}
+
               <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <Input name="password" id="password" type="password" required />
               </Field>
-              {/* Actions */}
+
+              {actionData?.error && (
+                <p className="text-sm text-red-500">{actionData.message}</p>
+              )}
+
               <Field>
                 <Button type="submit">Login</Button>
+
                 <Button
+                  type="submit"
                   variant="outline"
-                  type="button"
-                  onClick={handleGoogleSignIn}
+                  name="provider"
+                  value="google"
+                  formNoValidate
                 >
                   Login with Google
                 </Button>
+
                 <FieldDescription className="text-center">
                   Don&apos;t have an account?{" "}
                   <a href="/auth/register">Sign up</a>
                 </FieldDescription>
               </Field>
             </FieldGroup>
-          </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

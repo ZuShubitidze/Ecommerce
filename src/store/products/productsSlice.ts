@@ -1,60 +1,154 @@
-import type { Product } from "@/store/products/interfaces/product.interface";
+// src/store/products/productsSlice.ts
+
 import {
   createSlice,
-  createAction,
+  createAsyncThunk,
   type PayloadAction,
 } from "@reduxjs/toolkit";
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  startAfter,
+  DocumentSnapshot, // Keep this import
+} from "firebase/firestore";
+import type { Product } from "@/store/products/interfaces/product.interface";
+import { db } from "@/firebase";
 
-interface FirestoreProductsData {
-  products: Product[];
-}
-
-// Products slice state interface
 interface ProductsState {
-  data: FirestoreProductsData;
+  products: Product[];
+  hasMore: boolean;
   loading: boolean;
   error: string | null;
 }
 
-// Initial state for products slice
 const initialState: ProductsState = {
-  data: {
-    products: [],
-  },
+  products: [],
+  hasMore: true,
   loading: false,
   error: null,
 };
 
-// Action Types from subscribeToProducts
-export const productsRequest = createAction("FETCH_PRODUCTS_REQUEST");
-export const productsSuccess = createAction<Product[]>(
-  "FETCH_PRODUCTS_SUCCESS"
-);
-export const productsFailure = createAction<string>("FETCH_PRODUCTS_FAILURE");
+const PRODUCTS_PER_PAGE = 12;
 
-// Products slice definition
+export const fetchInitialProducts = createAsyncThunk(
+  "products/fetchInitial",
+  async (_, { rejectWithValue }) => {
+    try {
+      const productsCollectionRef = collection(db, "products");
+      const q = query(
+        productsCollectionRef,
+        orderBy("title"),
+        limit(PRODUCTS_PER_PAGE)
+      );
+
+      const documentSnapshots = await getDocs(q);
+      const products: Product[] = [];
+      documentSnapshots.forEach((doc) => {
+        products.push({ id: doc.id, ...doc.data() } as Product);
+      });
+
+      const lastVisible =
+        documentSnapshots.docs[documentSnapshots.docs.length - 1] || null;
+      const hasMore = documentSnapshots.docs.length === PRODUCTS_PER_PAGE;
+
+      // Ensure lastVisible is returned here, it will be in the action.payload
+      return { products, hasMore, lastVisible };
+    } catch (error: any) {
+      console.error("Error fetching initial products:", error);
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const fetchMoreProducts = createAsyncThunk(
+  "products/fetchMore",
+  async (lastDoc: DocumentSnapshot, { rejectWithValue }) => {
+    try {
+      const productsCollectionRef = collection(db, "products");
+      const q = query(
+        productsCollectionRef,
+        orderBy("title"),
+        startAfter(lastDoc),
+        limit(PRODUCTS_PER_PAGE)
+      );
+
+      const documentSnapshots = await getDocs(q);
+      const newProducts: Product[] = [];
+      documentSnapshots.forEach((doc) => {
+        newProducts.push({ id: doc.id, ...doc.data() } as Product);
+      });
+
+      const lastVisible =
+        documentSnapshots.docs[documentSnapshots.docs.length - 1] || null;
+      const hasMore = documentSnapshots.docs.length === PRODUCTS_PER_PAGE;
+
+      // Ensure lastVisible is returned here, it will be in the action.payload
+      return { products: newProducts, hasMore, lastVisible };
+    } catch (error: any) {
+      console.error("Error fetching more products:", error);
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 const productsSlice = createSlice({
   name: "products",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(productsRequest, (state) => {
-        // Use the action creator directly
+      .addCase(fetchInitialProducts.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(productsSuccess, (state, action: PayloadAction<Product[]>) => {
-        // Use the action creator directly
+      .addCase(
+        fetchInitialProducts.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            products: Product[];
+            hasMore: boolean;
+            // Add lastVisible back to PayloadAction type for type safety in reducer
+            lastVisible: DocumentSnapshot | null;
+          }>
+        ) => {
+          state.loading = false;
+          state.products = action.payload.products;
+          state.hasMore = action.payload.hasMore;
+          // IMPORTANT: Still NO ASSIGNMENT to state.lastVisibleDoc
+        }
+      )
+      .addCase(fetchInitialProducts.rejected, (state, action) => {
         state.loading = false;
-        state.data.products = action.payload;
-        // If you need 'total', calculate it here:
-        // state.data.total = action.payload.length;
+        state.error = action.payload as string;
       })
-      .addCase(productsFailure, (state, action: PayloadAction<string>) => {
-        // Use the action creator directly
+      .addCase(fetchMoreProducts.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchMoreProducts.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            products: Product[];
+            hasMore: boolean;
+            // Add lastVisible back to PayloadAction type for type safety in reducer
+            lastVisible: DocumentSnapshot | null;
+          }>
+        ) => {
+          state.loading = false;
+          state.products = [...state.products, ...action.payload.products];
+          state.hasMore = action.payload.hasMore;
+          // IMPORTANT: Still NO ASSIGNMENT to state.lastVisibleDoc
+        }
+      )
+      .addCase(fetchMoreProducts.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       });
   },
 });

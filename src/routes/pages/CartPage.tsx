@@ -20,16 +20,6 @@ const CartPage = () => {
   const { totalAmount } = useSelector(selectCartTotal);
   const { user } = useAuth();
 
-  console.log(
-    "CartPage - loading:",
-    loading,
-    "error:",
-    error,
-    "cartProducts:",
-    cartProducts,
-    "totalAmount:",
-    totalAmount
-  );
   if (loading) {
     console.log(cartProducts);
     return <div>Loading cart...</div>;
@@ -51,29 +41,46 @@ const CartPage = () => {
 
   return (
     <div className="py-10">
-      <h2 className="flex justify-center text-3xl font-bold">
+      <h2 className="flex justify-center text-3xl font-bold mb-20">
         Your Shopping Cart
       </h2>
       {cartProducts.length === 0 ? (
         // Empty Cart
-        <p>Your cart is empty. Start shopping!</p>
+        <p className="text-2xl">
+          Your cart is empty.
+          <Link to="/products" className="text-blue-500 font-bold ml-2">
+            Start shopping!
+          </Link>
+        </p>
       ) : (
-        <>
+        <section className="flex flex-col gap-6">
+          {/* Header row - visible on md+ so labels align with the item columns */}
+          <div className="hidden md:grid grid-cols-12 gap-4 p-4 border-b font-semibold">
+            <div className="col-span-4">Product</div>
+            <div className="col-span-2 text-right">Price</div>
+            <div className="col-span-3 text-center">Quantity</div>
+            <div className="col-span-2 text-right">Subtotal</div>
+            <div className="col-span-1" /> {/* spacer for remove button */}
+          </div>
+
+          {/* Items */}
           {cartProducts.map((product) => (
             // Cart product details
             <div key={product.id}>
               <CartItem product={product} />
             </div>
           ))}
-          <Button onClick={handleClearCart}>Clear Cart</Button>
+          <Button onClick={handleClearCart} className="w-30">
+            Clear Cart
+          </Button>
           {/* Total and checkout */}
-          <section className="mt-10 flex gap-10 justify-center">
+          <div className="mt-10 flex gap-10 justify-center items-center">
             <h3>Total: ${totalAmount.toFixed(2)}</h3>
             <Link to="/cart/checkout">
               <Button>Proceed to Checkout</Button>
             </Link>
-          </section>
-        </>
+          </div>
+        </section>
       )}
     </div>
   );

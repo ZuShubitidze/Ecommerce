@@ -8,29 +8,31 @@ import {
 import type { RootState } from "@/store/store";
 import Products from "@/components/Products";
 import { useSelector } from "react-redux";
-import { useAuth } from "../auth/AuthContext";
 
 const Home = () => {
-  const { data } = useSelector((state: RootState) => state.products);
-  const { user } = useAuth();
+  const { products } = useSelector((state: RootState) => state.products);
+  const { user, loading } = useSelector((state: RootState) => state.auth);
+
+  if (loading) return null;
 
   // Filter products for carousel
-  const carouselProducts = data?.products.slice(0, 5) || [];
-
+  const carouselProducts = products?.slice(0, 5) || [];
   return (
     // Carousel Section
     <Carousel
       opts={{
         align: "start",
       }}
-      className="w-100 m-auto md:w-full h-auto md:px-4 lg:px-6"
+      className="py-12 w-full mx-auto flex flex-col md:flex-row overflow-visible"
     >
+      <CarouselPrevious className="mb-4 md:mb-0 p-2 bg-white rounded shadow-lg z-40 self-center" />
+
       {/* Carousel Content */}
-      <CarouselContent className="flex">
+      <CarouselContent className="">
         {carouselProducts.map((product, index) => (
           <CarouselItem
             key={index}
-            className="basis-full md:basis-1/2 lg:basis-1/3"
+            className="basis-full md:basis-1/2 lg:basis-1/3 flex justify-center"
           >
             <Products
               id={product.id}
@@ -44,8 +46,7 @@ const Home = () => {
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
+      <CarouselNext className="mt-4 md:mt-0 p-2 bg-white rounded shadow-lg z-40 self-center" />
     </Carousel>
   );
 };

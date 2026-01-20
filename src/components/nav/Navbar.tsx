@@ -1,43 +1,59 @@
 import { NavLink } from "react-router";
 import { auth } from "@/firebase";
-import { useAuth } from "@/routes/auth/AuthContext";
 import { Button } from "../ui/button";
 import { ModeToggle } from "./mode-toggle";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store/store";
 
 const Navbar = () => {
-  const { user } = useAuth();
+  const { user, loading } = useSelector((state: RootState) => state.auth);
+
+  if (loading) return null;
 
   return (
-    <nav className="flex gap-10 items-center p-10 font-bold md:text-3xl">
+    <nav className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4 md:gap-10 p-4 md:p-10 font-bold text-lg md:text-3xl">
       {/* Navigation Links */}
-      <div className="flex gap-10 md:gap-20">
-        <NavLink to="/">Home</NavLink>
-        <NavLink to="/products">Products</NavLink>
+      <div className="flex flex-col md:flex-row gap-2 md:gap-10">
+        <NavLink
+          to="/"
+          className={({ isActive }) => (isActive ? "underline" : "")}
+        >
+          Home
+        </NavLink>
+        <NavLink
+          to="/products"
+          className={({ isActive }) => (isActive ? "underline" : "")}
+        >
+          Products
+        </NavLink>
       </div>
 
       {/* User Links */}
-      <div className="ml-auto flex gap-10 md:gap-20 items-center">
+      <div className="flex gap-4 md:gap-10 items-center w-full md:w-auto">
         {user ? (
-          // Logged-in User Links
-          <div className="flex gap-10 md:gap-20 items-center">
-            <NavLink to="/favorites">Favorites</NavLink>
-            <NavLink to="/cart">Cart</NavLink>
-            <NavLink to="/dashboard">Dashboard</NavLink>
+          <div className="flex flex-col md:flex-row gap-2 md:gap-10 items-start md:items-center w-full md:w-auto">
+            <div className="flex gap-2 md:gap-10">
+              <NavLink to="/favorites">Favorites</NavLink>
+              <NavLink to="/cart">Cart</NavLink>
+              <NavLink to="/dashboard">Dashboard</NavLink>
+            </div>
+
             <Button
               onClick={() => {
                 auth.signOut();
               }}
+              className="mt-2 md:mt-0"
             >
               Logout
             </Button>
           </div>
         ) : (
-          // Guest User Links
-          <>
+          <div className="flex gap-2 md:gap-10">
             <NavLink to="/auth/login">Login</NavLink>
             <NavLink to="/auth/register">Register</NavLink>
-          </>
+          </div>
         )}
+
         <ModeToggle />
       </div>
     </nav>

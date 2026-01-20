@@ -2,7 +2,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -104,7 +103,6 @@ const Products = ({
           onError={(e) => (e.currentTarget.src = substituteImage)}
         />
       </CardContent>
-      <CardFooter>Card Footer</CardFooter>
     </Card>
   );
 };
