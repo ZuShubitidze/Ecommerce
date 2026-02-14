@@ -18,12 +18,8 @@ const stripePromise = loadStripe(
 );
 
 const PaymentPage = () => {
-  // const { user } = useAuth();
-  const { user, loading: authLoading } = useSelector(
-    (state: RootState) => state.auth,
-  );
+  const { user } = useSelector((state: RootState) => state.auth);
 
-  if (authLoading) return null;
   const dispatch = useDispatch();
   const navigate = useNavigate();
 

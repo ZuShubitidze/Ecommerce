@@ -1,97 +1,91 @@
-// src/store/products/productsSlice.ts
-
-import {
-  createSlice,
-  createAsyncThunk,
-  type PayloadAction,
-} from "@reduxjs/toolkit";
+import { db } from "@/firebase";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   collection,
-  query,
-  orderBy,
-  limit,
   getDocs,
+  limit,
+  orderBy,
+  query,
   startAfter,
-  DocumentSnapshot, // Keep this import
+  DocumentSnapshot,
 } from "firebase/firestore";
-import type { Product } from "@/store/products/interfaces/product.interface";
-import { db } from "@/firebase";
+import type { RootState } from "../store";
 
-interface ProductsState {
-  products: Product[];
+interface ProductState {
+  products: any[];
+  lastVisible: DocumentSnapshot | null;
   hasMore: boolean;
   loading: boolean;
   error: string | null;
 }
 
-const initialState: ProductsState = {
+const initialState: ProductState = {
   products: [],
+  lastVisible: null,
   hasMore: true,
   loading: false,
   error: null,
 };
 
-const PRODUCTS_PER_PAGE = 12;
-
+// 1. Initial Fetch Thunk
 export const fetchInitialProducts = createAsyncThunk(
-  "products/fetchInitial",
+  "products/fetchInitialProducts",
   async (_, { rejectWithValue }) => {
     try {
-      const productsCollectionRef = collection(db, "products");
       const q = query(
-        productsCollectionRef,
-        orderBy("title"),
-        limit(PRODUCTS_PER_PAGE)
+        collection(db, "products"),
+        orderBy("title"), // or "createdAt"
+        limit(10),
       );
-
-      const documentSnapshots = await getDocs(q);
-      const products: Product[] = [];
-      documentSnapshots.forEach((doc) => {
-        products.push({ id: doc.id, ...doc.data() } as Product);
-      });
-
+      const querySnapshot = await getDocs(q);
+      const products = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       const lastVisible =
-        documentSnapshots.docs[documentSnapshots.docs.length - 1] || null;
-      const hasMore = documentSnapshots.docs.length === PRODUCTS_PER_PAGE;
+        querySnapshot.docs[querySnapshot.docs.length - 1] || null;
 
-      // Ensure lastVisible is returned here, it will be in the action.payload
-      return { products, hasMore, lastVisible };
+      return { products, lastVisible, hasMore: products.length === 10 };
     } catch (error: any) {
-      console.error("Error fetching initial products:", error);
       return rejectWithValue(error.message);
     }
-  }
+  },
 );
 
+// 2. Load More Thunk
 export const fetchMoreProducts = createAsyncThunk(
-  "products/fetchMore",
-  async (lastDoc: DocumentSnapshot, { rejectWithValue }) => {
+  "products/fetchMoreProducts",
+  async (_, { getState, rejectWithValue }) => {
     try {
-      const productsCollectionRef = collection(db, "products");
+      const state = getState() as RootState;
+      const lastDoc = state.products.lastVisible;
+
+      if (!lastDoc) return rejectWithValue("No more documents to fetch");
+
       const q = query(
-        productsCollectionRef,
+        collection(db, "products"),
         orderBy("title"),
         startAfter(lastDoc),
-        limit(PRODUCTS_PER_PAGE)
+        limit(10),
       );
 
-      const documentSnapshots = await getDocs(q);
-      const newProducts: Product[] = [];
-      documentSnapshots.forEach((doc) => {
-        newProducts.push({ id: doc.id, ...doc.data() } as Product);
-      });
+      const querySnapshot = await getDocs(q);
+      const nextProducts = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const nextLastVisible =
+        querySnapshot.docs[querySnapshot.docs.length - 1] || null;
 
-      const lastVisible =
-        documentSnapshots.docs[documentSnapshots.docs.length - 1] || null;
-      const hasMore = documentSnapshots.docs.length === PRODUCTS_PER_PAGE;
-
-      // Ensure lastVisible is returned here, it will be in the action.payload
-      return { products: newProducts, hasMore, lastVisible };
+      return {
+        products: nextProducts,
+        lastVisible: nextLastVisible,
+        hasMore: nextProducts.length === 10,
+      };
     } catch (error: any) {
-      console.error("Error fetching more products:", error);
       return rejectWithValue(error.message);
     }
-  }
+  },
 );
 
 const productsSlice = createSlice({
@@ -100,52 +94,30 @@ const productsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Initial Fetch
       .addCase(fetchInitialProducts.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
-      .addCase(
-        fetchInitialProducts.fulfilled,
-        (
-          state,
-          action: PayloadAction<{
-            products: Product[];
-            hasMore: boolean;
-            // Add lastVisible back to PayloadAction type for type safety in reducer
-            lastVisible: DocumentSnapshot | null;
-          }>
-        ) => {
-          state.loading = false;
-          state.products = action.payload.products;
-          state.hasMore = action.payload.hasMore;
-          // IMPORTANT: Still NO ASSIGNMENT to state.lastVisibleDoc
-        }
-      )
+      .addCase(fetchInitialProducts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = action.payload.products;
+        state.lastVisible = action.payload.lastVisible;
+        state.hasMore = action.payload.hasMore;
+      })
       .addCase(fetchInitialProducts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
+      // More Products
       .addCase(fetchMoreProducts.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
-      .addCase(
-        fetchMoreProducts.fulfilled,
-        (
-          state,
-          action: PayloadAction<{
-            products: Product[];
-            hasMore: boolean;
-            // Add lastVisible back to PayloadAction type for type safety in reducer
-            lastVisible: DocumentSnapshot | null;
-          }>
-        ) => {
-          state.loading = false;
-          state.products = [...state.products, ...action.payload.products];
-          state.hasMore = action.payload.hasMore;
-          // IMPORTANT: Still NO ASSIGNMENT to state.lastVisibleDoc
-        }
-      )
+      .addCase(fetchMoreProducts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = [...state.products, ...action.payload.products];
+        state.lastVisible = action.payload.lastVisible;
+        state.hasMore = action.payload.hasMore;
+      })
       .addCase(fetchMoreProducts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;

@@ -16,13 +16,15 @@ import {
 import { clearCart, subscribeToCart } from "@/store/cart/cartSlice";
 
 const Root = () => {
+  const { initialized } = useSelector((state: RootState) => state.auth);
+
   const dispatch = useAppDispatch<AppDispatch>();
   const unsubscribeProductsRef = useRef<(() => void) | null>(null);
   const favoritesUnsubscribeRef = useRef<(() => void) | null>(null); // New ref for favorites
   const cartUnsubscribeRef = useRef<(() => void) | null>(null);
 
   const { loading: productsLoading, error: productsError } = useSelector(
-    (state: RootState) => state.products
+    (state: RootState) => state.products,
   );
 
   // Only subscribe to products once when the app mounts
@@ -102,6 +104,14 @@ const Root = () => {
           Error loading application data: {productsError}. Please try again
           later.
         </p>
+      </div>
+    );
+  }
+
+  if (!initialized) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <p>Initializing...</p>
       </div>
     );
   }

@@ -6,9 +6,13 @@ import { Link, useNavigate } from "react-router";
 const FavoritesPage = () => {
   const favorites = useSelector((state: RootState) => state.favorites);
   const navigate = useNavigate();
-  const { user, loading } = useSelector((state: RootState) => state.auth);
+  const { user, loading: authLoading } = useSelector(
+    (state: RootState) => state.auth,
+  );
 
-  if (loading) return null;
+  if (authLoading) {
+    return <div>Loading...</div>;
+  }
 
   // Navigate to product details on click
   const handleClick = (id: string) => {

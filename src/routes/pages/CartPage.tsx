@@ -1,24 +1,15 @@
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router";
-import {
-  selectCartProducts,
-  selectCartLoading,
-  selectCartError,
-  selectCartTotal,
-  clearCart,
-  clearCartInFirestore,
-} from "@/store/cart/cartSlice";
+import { clearCart, clearCartInFirestore } from "@/store/cart/cartSlice";
 import CartItem from "./CartItem";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "../auth/AuthContext";
+import type { RootState } from "@/store/store";
+import { useCartData } from "@/hooks/useCartData";
 
 const CartPage = () => {
   const dispatch = useDispatch();
-  const loading = useSelector(selectCartLoading);
-  const error = useSelector(selectCartError);
-  const cartProducts = useSelector(selectCartProducts);
-  const { totalAmount } = useSelector(selectCartTotal);
-  const { user } = useAuth();
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { cartProducts, total, error, loading } = useCartData();
 
   if (loading) {
     console.log(cartProducts);
@@ -29,10 +20,11 @@ const CartPage = () => {
     return <div>Error loading cart: {error}</div>;
   }
 
-  // <--- Create a handler for clearing the cart
+  // Clear cart handler
   const handleClearCart = async () => {
     if (user?.uid) {
-      await dispatch(clearCartInFirestore(user.uid) as any); // Dispatch the thunk to clear Firestore
+      // Dispatch the thunk to clear Firestore
+      await dispatch(clearCartInFirestore(user.uid) as any);
     } else {
       console.warn("Cannot clear cart: User not logged in.");
       dispatch(clearCart());
@@ -75,7 +67,7 @@ const CartPage = () => {
           </Button>
           {/* Total and checkout */}
           <div className="mt-10 flex gap-10 justify-center items-center">
-            <h3>Total: ${totalAmount.toFixed(2)}</h3>
+            <h3>Total: ${total.totalAmount.toFixed(2)}</h3>
             <Link to="/cart/checkout">
               <Button>Proceed to Checkout</Button>
             </Link>

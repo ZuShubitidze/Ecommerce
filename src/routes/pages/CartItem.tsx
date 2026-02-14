@@ -1,12 +1,11 @@
 import React from "react";
-import { useDispatch } from "react-redux";
-import { useAuth } from "@/routes/auth/AuthContext"; // Assuming you get user here"
+import { useDispatch, useSelector } from "react-redux";
 import {
   removeCartProductFromFirestore,
   updateCartProductQuantityInFirestore,
 } from "@/store/cart/cartSlice";
 import type { FavoriteProductData } from "@/store/favorites/interfaces/favorites.interface";
-import type { AppDispatch } from "@/store/store";
+import type { AppDispatch, RootState } from "@/store/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -16,7 +15,9 @@ interface CartItemProps {
 
 const CartItem: React.FC<CartItemProps> = ({ product }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { user } = useAuth();
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  // if (authLoading) return null;
 
   // Increment product quantity
   const handleIncrement = () => {
@@ -25,8 +26,8 @@ const CartItem: React.FC<CartItemProps> = ({ product }) => {
         updateCartProductQuantityInFirestore(
           user.uid,
           product.id,
-          product.quantity + 1
-        )
+          product.quantity + 1,
+        ),
       );
     }
   };
@@ -43,8 +44,8 @@ const CartItem: React.FC<CartItemProps> = ({ product }) => {
           updateCartProductQuantityInFirestore(
             user.uid,
             product.id,
-            newQuantity
-          )
+            newQuantity,
+          ),
         );
       }
     }
@@ -59,7 +60,7 @@ const CartItem: React.FC<CartItemProps> = ({ product }) => {
           dispatch(removeCartProductFromFirestore(user.uid, product.id));
         } else {
           dispatch(
-            updateCartProductQuantityInFirestore(user.uid, product.id, value)
+            updateCartProductQuantityInFirestore(user.uid, product.id, value),
           );
         }
       }

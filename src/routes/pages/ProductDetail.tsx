@@ -17,9 +17,8 @@ import { handleToggleCart } from "@/store/cart/hooks/handleToggleCart";
 
 const ProductDetail = () => {
   const dispatch = useAppDispatch();
-  const { user, loading } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
 
-  if (loading) return null;
   const id = useParams();
   const data: ProductsResponse = useSelector(
     (state: RootState) => state.products,

@@ -6,9 +6,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 
 const Navbar = () => {
-  const { user, loading } = useSelector((state: RootState) => state.auth);
-
-  if (loading) return null;
+  const { user } = useSelector((state: RootState) => state.auth);
 
   return (
     <nav className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4 md:gap-10 p-4 md:p-10 font-bold text-lg md:text-3xl">
@@ -16,13 +14,17 @@ const Navbar = () => {
       <div className="flex flex-col md:flex-row gap-2 md:gap-10">
         <NavLink
           to="/"
-          className={({ isActive }) => (isActive ? "underline" : "")}
+          className={({ isActive }) =>
+            isActive ? "dark:bg-blue-800 p-2 rounded-md" : "p-2 rounded-md"
+          }
         >
           Home
         </NavLink>
         <NavLink
           to="/products"
-          className={({ isActive }) => (isActive ? "underline" : "")}
+          className={({ isActive }) =>
+            isActive ? "dark:bg-blue-800 p-2 rounded-md" : "p-2 rounded-md"
+          }
         >
           Products
         </NavLink>
@@ -33,9 +35,36 @@ const Navbar = () => {
         {user ? (
           <div className="flex flex-col md:flex-row gap-2 md:gap-10 items-start md:items-center w-full md:w-auto">
             <div className="flex gap-2 md:gap-10">
-              <NavLink to="/favorites">Favorites</NavLink>
-              <NavLink to="/cart">Cart</NavLink>
-              <NavLink to="/dashboard">Dashboard</NavLink>
+              <NavLink
+                to="/favorites"
+                className={({ isActive }) =>
+                  isActive
+                    ? "dark:bg-blue-800 p-2 rounded-md"
+                    : "p-2 rounded-md"
+                }
+              >
+                Favorites
+              </NavLink>
+              <NavLink
+                to="/cart"
+                className={({ isActive }) =>
+                  isActive
+                    ? "dark:bg-blue-800 p-2 rounded-md"
+                    : "p-2 rounded-md"
+                }
+              >
+                Cart
+              </NavLink>
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) =>
+                  isActive
+                    ? "dark:bg-blue-800 p-2 rounded-md"
+                    : "p-2 rounded-md"
+                }
+              >
+                Dashboard
+              </NavLink>
             </div>
 
             <Button

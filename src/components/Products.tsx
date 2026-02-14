@@ -13,6 +13,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 import { handleToggleFavorite } from "@/store/favorites/hooks/handleToggleFavorite";
 import { handleToggleCart } from "@/store/cart/hooks/handleToggleCart";
+import { useCartData } from "@/hooks/useCartData";
 
 // Product Component Props
 interface ProductsProps {
@@ -37,11 +38,11 @@ const Products = ({
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const favorites = useSelector(
-    (state: RootState) => state.favorites.favorites
+    (state: RootState) => state.favorites.favorites,
   );
-  const cart = useSelector((state: RootState) => state.cart.cartProducts);
+  const cartProducts = useCartData().cartProducts;
   const isFavorite = favorites.some((fav) => fav.id === id.toString());
-  const isInCart = cart.some((car) => car.id === id.toString());
+  const isInCart = cartProducts.some((car) => car.id === id.toString());
 
   // Navigate to product details on click
   const handleClick = () => {
@@ -63,15 +64,16 @@ const Products = ({
           <CardAction className="flex flex-col gap-4 w-full md:items-end">
             {/* Favorite Toggle Button */}
             <Button
-              onClick={(event) =>
+              onClick={(event) => {
+                event.stopPropagation();
                 handleToggleFavorite(event, isFavorite, user, id, dispatch, {
                   id,
                   title,
                   price,
                   category,
                   images,
-                })
-              }
+                });
+              }}
             >
               {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
             </Button>

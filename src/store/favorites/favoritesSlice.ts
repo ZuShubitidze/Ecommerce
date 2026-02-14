@@ -29,28 +29,22 @@ const initialState: FavoritesState = {
 
 // These actions will be dispatched by our thunks that interact with Firestore.
 export const fetchFavoritesRequest = createAction(
-  "favorites/fetchFavoritesRequest"
+  "favorites/fetchFavoritesRequest",
 );
 export const fetchFavoritesSuccess = createAction<FavoriteProductData[]>(
-  "favorites/fetchFavoritesSuccess"
+  "favorites/fetchFavoritesSuccess",
 );
 export const fetchFavoritesFailure = createAction<string>(
-  "favorites/fetchFavoritesFailure"
+  "favorites/fetchFavoritesFailure",
 );
 
 // Async Thunks for Firestore Interaction
-/**
-Thunk to set up a real-time listener for a user's favorites from Firestore.
-It takes the userId to listen to the correct subcollection.
-It dispatches `fetchFavoritesRequest`, `fetchFavoritesSuccess`, or `fetchFavoritesFailure`.
-Returns an unsubscribe function to stop the listener.
- */
 export const subscribeToFavorites = (userId: string) => (dispatch: any) => {
   if (!userId) {
     // If no user ID, clear favorites and return a no-op unsubscribe
     dispatch(clearFavorites());
     console.warn(
-      "No user ID provided for favorites subscription. Clearing favorites."
+      "No user ID provided for favorites subscription. Clearing favorites.",
     );
     return () => {}; // Return a dummy unsubscribe function
   }
@@ -67,23 +61,20 @@ export const subscribeToFavorites = (userId: string) => (dispatch: any) => {
         (doc) => ({
           ...(doc.data() as FavoriteProductData), // Cast to FavoriteProductData interface
           id: doc.id, // Assuming doc.id is the product ID
-        })
+        }),
       );
       dispatch(fetchFavoritesSuccess(favorites));
     },
     (error: any) => {
       console.error("Error subscribing to favorites:", error);
       dispatch(fetchFavoritesFailure(error.message));
-    }
+    },
   );
 
   return unsubscribe;
 };
 
-/**
- * Thunk to add a product to a user's favorites in Firestore.
- * It uses `setDoc` with the product ID as the document ID for idempotent adds.
- */
+// Add a product to a user's favorites in Firestore
 export const addFavoriteToFirestore =
   (userId: string, product: FavoriteProductData) => async () => {
     if (!userId) {
@@ -103,7 +94,7 @@ export const addFavoriteToFirestore =
       await setDoc(favoriteDocRef, product);
       // The onSnapshot listener will automatically update the Redux state via subscribeToFavorites
       console.log(
-        `Product ${product.id} added to favorites for user ${userId}`
+        `Product ${product.id} added to favorites for user ${userId}`,
       );
     } catch (error: any) {
       console.error("Error adding favorite to Firestore:", error);
@@ -125,7 +116,7 @@ export const removeFavoriteFromFirestore =
       await deleteDoc(favoriteDocRef);
       // The onSnapshot listener will automatically update the Redux state via subscribeToFavorites
       console.log(
-        `Product ${productId} removed from favorites for user ${userId}`
+        `Product ${productId} removed from favorites for user ${userId}`,
       );
     } catch (error: any) {
       console.error("Error removing favorite from Firestore:", error);
@@ -155,14 +146,14 @@ const favoritesSlice = createSlice({
         (state, action: PayloadAction<FavoriteProductData[]>) => {
           state.loading = false;
           state.favorites = action.payload;
-        }
+        },
       )
       .addCase(
         fetchFavoritesFailure,
         (state, action: PayloadAction<string>) => {
           state.loading = false;
           state.error = action.payload;
-        }
+        },
       );
   },
 });

@@ -16,18 +16,15 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        // Ignore specific actions that contain non-serializable values in their payload
+        // 1. Ignore the action payloads that carry the snapshot
         ignoredActions: [
-          "products/fetchInitial/fulfilled",
-          "products/fetchMore/fulfilled",
+          "products/fetchInitialProducts/fulfilled",
+          "products/fetchMoreProducts/fulfilled",
         ],
-        // Ignore specific paths within actions or state
-        // The error message specifies `payload.lastVisible`
-        ignoredPaths: [
-          "payload.lastVisible", // This tells the middleware to ignore this path in action payloads
-        ],
-        // If you were storing `lastVisibleDoc` in the Redux state, you'd also ignore paths like:
-        // "products.lastVisibleDoc"
+        // 2. Ignore the specific path in the action payload
+        ignoredActionPaths: ["payload.lastVisible"],
+        // 3. Ignore the path in the Redux state where the snapshot lives
+        ignoredPaths: ["products.lastVisible"],
       },
     }),
 });

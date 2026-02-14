@@ -38,7 +38,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     // Ensure Stripe.js, Elements and user are available
     if (!stripe || !elements || !user) {
       setError(
-        "Payment gateway not loaded or user not authenticated. Please try again."
+        "Payment gateway not loaded or user not authenticated. Please try again.",
       );
       setLoading(false);
       return;
@@ -61,7 +61,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     // Error
     if (createPaymentMethodError) {
       setError(
-        createPaymentMethodError.message || "Failed to create payment method."
+        createPaymentMethodError.message || "Failed to create payment method.",
       );
       setLoading(false);
       return;
@@ -78,7 +78,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
     try {
       const paymentsCollectionRef = collection(
         db,
-        `stripe_customers/${user.user?.uid}/payments`
+        `stripe_customers/${user.user?.uid}/payments`,
       );
 
       // Add a new document to the 'payments' subcollection
@@ -92,11 +92,10 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
       console.log(
         "Payment initiation document written to Firestore with ID:",
-        paymentDocRef.id
+        paymentDocRef.id,
       );
 
       // 3. Listen for real-time updates on the Firestore document
-      // The Stripe Payments extension will update this document with client_secret
       const unsubscribe = onSnapshot(paymentDocRef, async (snapshot) => {
         const paymentData = snapshot.data();
 
@@ -104,7 +103,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         if (paymentData && paymentData.client_secret && !paymentData.status) {
           console.log(
             "Client secret received from Firestore:",
-            paymentData.client_secret
+            paymentData.client_secret,
           );
           // Now, confirm the payment on the client side using the client_secret
           const { error: confirmError, paymentIntent } =
@@ -116,24 +115,21 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
             setError(confirmError.message || "Payment confirmation failed.");
             setLoading(false);
             onPaymentError?.(
-              confirmError.message || "Payment confirmation failed."
+              confirmError.message || "Payment confirmation failed.",
             );
             unsubscribe(); // Stop listening after an error
           } else if (paymentIntent?.status === "succeeded") {
             setSuccessMessage(
-              "Payment successful! Thank you for your purchase."
+              "Payment successful! Thank you for your purchase.",
             );
             console.log("Stripe PaymentIntent succeeded:", paymentIntent);
             setLoading(false);
             onPaymentSuccess?.();
             unsubscribe(); // Stop listening after success
           } else {
-            // Handle other payment intent statuses (e.g., 'requires_action' for 3D Secure)
-            // stripe.confirmCardPayment usually handles 3D Secure redirects/pop-ups,
-            // but you might have specific UI logic for certain statuses.
             console.log("Stripe PaymentIntent status:", paymentIntent?.status);
             setSuccessMessage(
-              `Payment status: ${paymentIntent?.status}. You might need to refresh or check your orders.`
+              `Payment status: ${paymentIntent?.status}. You might need to refresh or check your orders.`,
             );
             setLoading(false);
             onPaymentSuccess?.(); // Or a custom handler for 'requires_action'
@@ -144,7 +140,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
           setSuccessMessage("Payment successful! Thank you for your purchase.");
           console.log(
             "Payment successful via Firestore status (no client_secret needed):",
-            paymentData
+            paymentData,
           );
           setLoading(false);
           onPaymentSuccess?.();
@@ -152,33 +148,27 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
         } else if (paymentData && paymentData.error) {
           // If the extension encountered an error on the server side
           setError(
-            paymentData.error.message || "Payment failed on the server."
+            paymentData.error.message || "Payment failed on the server.",
           );
           console.error(
             "Server-side payment error from extension:",
-            paymentData.error
+            paymentData.error,
           );
           setLoading(false);
           onPaymentError?.(
-            paymentData.error.message || "Server-side payment failure."
+            paymentData.error.message || "Server-side payment failure.",
           );
           unsubscribe();
         }
       });
-
-      // It's good practice to clean up the listener if the component unmounts
-      // before the payment process is complete (though the listener unsubscribes itself above).
-      // useEffect(() => {
-      //   return () => unsubscribe();
-      // }, [unsubscribe]); // Depend on unsubscribe to re-run effect if it changes
     } catch (firestoreError: any) {
       setError(
         firestoreError.message ||
-          "An error occurred while initiating payment in Firestore."
+          "An error occurred while initiating payment in Firestore.",
       );
       console.error(
         "Error writing payment document to Firestore:",
-        firestoreError
+        firestoreError,
       );
       setLoading(false);
       onPaymentError?.(firestoreError.message || "Error initiating payment.");
