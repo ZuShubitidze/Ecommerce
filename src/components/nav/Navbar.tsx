@@ -11,7 +11,7 @@ const Navbar = () => {
   return (
     <nav className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4 md:gap-10 p-4 md:p-10 font-bold text-lg md:text-3xl">
       {/* Navigation Links */}
-      <div className="flex flex-col md:flex-row gap-2 md:gap-10">
+      <div className="flex flex-row gap-2 md:gap-10">
         <NavLink
           to="/"
           className={({ isActive }) =>
