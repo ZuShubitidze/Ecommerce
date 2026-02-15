@@ -15,7 +15,9 @@ const Navbar = () => {
         <NavLink
           to="/"
           className={({ isActive }) =>
-            isActive ? "dark:bg-blue-800 p-2 rounded-md" : "p-2 rounded-md"
+            isActive
+              ? "dark:bg-gray-500 bg-blue-400 p-2 rounded-md"
+              : "p-2 rounded-md"
           }
         >
           Home
@@ -23,7 +25,9 @@ const Navbar = () => {
         <NavLink
           to="/products"
           className={({ isActive }) =>
-            isActive ? "dark:bg-blue-800 p-2 rounded-md" : "p-2 rounded-md"
+            isActive
+              ? "dark:bg-gray-500 bg-blue-400 p-2 rounded-md"
+              : "p-2 rounded-md"
           }
         >
           Products
@@ -39,7 +43,7 @@ const Navbar = () => {
                 to="/favorites"
                 className={({ isActive }) =>
                   isActive
-                    ? "dark:bg-blue-800 p-2 rounded-md"
+                    ? "dark:bg-gray-500 bg-blue-400 p-2 rounded-md"
                     : "p-2 rounded-md"
                 }
               >
@@ -49,7 +53,7 @@ const Navbar = () => {
                 to="/cart"
                 className={({ isActive }) =>
                   isActive
-                    ? "dark:bg-blue-800 p-2 rounded-md"
+                    ? "dark:bg-gray-500 bg-blue-400 p-2 rounded-md"
                     : "p-2 rounded-md"
                 }
               >
@@ -59,7 +63,7 @@ const Navbar = () => {
                 to="/dashboard"
                 className={({ isActive }) =>
                   isActive
-                    ? "dark:bg-blue-800 p-2 rounded-md"
+                    ? "dark:bg-gray-500 bg-blue-400 p-2 rounded-md"
                     : "p-2 rounded-md"
                 }
               >
